@@ -37,7 +37,7 @@ var DB *sql.DB
 
 func ConnectDB() error {
 	var err error
-	DB, err = sql.Open("mysql", "root:123456@tcp(127.0.0.1:3307)/golang_demo")
+	DB, err = sql.Open("mysql", "root:123456@tcp(127.0.0.1:3307)/golang_demo?parseTime=true")
 	if err != nil {
 		return err
 	}
@@ -51,3 +51,14 @@ func ConnectDB() error {
 	log.Println("Kết nối cơ sở dữ liệu thành công")
 	return nil
 }
+func CheckLogoutHistory(token string) (bool, error) {
+	var exists bool
+	query := "SELECT EXISTS(SELECT 1 FROM logout_history WHERE token = ?)"
+	err := DB.QueryRow(query, token).Scan(&exists)
+	if err != nil {
+		log.Printf("Lỗi khi truy vấn database: %v", err)
+		return false, err
+	}
+	return exists, nil
+}
+

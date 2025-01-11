@@ -49,6 +49,8 @@ func SetupRouter() http.Handler {
 	protectedRoutes := r.PathPrefix("/").Subrouter()
 	protectedRoutes.Use(middleware.Authenticate) // Middleware áp dụng cho tất cả route bên dưới
 	protectedRoutes.HandleFunc("/user", handler.GetUserHandler).Methods("GET")
+	protectedRoutes.HandleFunc("/loginhistory", handler.GetLoginHistory).Methods("GET")
+	protectedRoutes.HandleFunc("/logout", handler.LogoutHandler).Methods("GET")
 
 	return corsHandler(r)
 }

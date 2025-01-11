@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
@@ -37,4 +38,33 @@ func ValidateToken(tokenStr string) (int, error) {
 	}
 
 	return 0, jwt.ErrSignatureInvalid
+}
+
+// VerifyToken kiểm tra tính hợp lệ của token
+func VerifyToken(tokenString string) (*jwt.Token, error) {
+	// Giải mã và xác thực token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Kiểm tra phương pháp ký mã hóa
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("phương pháp ký không hợp lệ")
+		}
+		return jwtKey, nil
+	})
+
+	// Nếu token không hợp lệ hoặc xảy ra lỗi
+	if err != nil {
+		return nil, err
+	}
+
+	// Kiểm tra token có hợp lệ không
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// Kiểm tra token hết hạn
+		expiration := int64(claims["exp"].(float64))
+		if expiration < time.Now().Unix() {
+			return nil, errors.New("token đã hết hạn")
+		}
+		return token, nil
+	}
+
+	return nil, errors.New("token không hợp lệ")
 }

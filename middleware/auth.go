@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"go-api/db"
 	"go-api/utils"
 )
 
@@ -29,7 +30,17 @@ func Authenticate(next http.Handler) http.Handler {
 			http.Error(w, "Token không hợp lệ 2", http.StatusUnauthorized)
 			return
 		}
+		// Kiểm tra userID có trong logout_history không
+		if isLoggedOut, err := db.CheckLogoutHistory(token); err != nil {
+			log.Printf("Lỗi khi kiểm tra lịch sử đăng xuất: %v", err)
+			http.Error(w, "Lỗi khi kiểm tra trạng thái đăng xuất", http.StatusInternalServerError)
+			return
+		} else if isLoggedOut {
+			http.Error(w, "Người dùng đã đăng xuất", http.StatusUnauthorized)
+			return
+		}
 
+		// Nếu tất cả đều ổn, thêm userID vào context và tiếp tục xử lý
 		r = r.WithContext(utils.WithUserID(r.Context(), userID))
 		next.ServeHTTP(w, r)
 	})
